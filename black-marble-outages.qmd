@@ -1,0 +1,29 @@
+```{r}
+#### Setup
+# Load packages
+library(blackmarbler)
+library(geodata)
+library(sf)
+library(terra)
+library(ggplot2)
+library(tidyterra)
+library(lubridate)
+library(tigris)
+
+#### Define NASA bearer token
+bearer <- "eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6InNtYWxsbGlnaHQiLCJleHAiOjE3OTI4Nzg5MDEsImlhdCI6MTc4NzY5NDkwMSwiaXNzIjoiaHR0cHM6Ly91cnMuZWFydGhkYXRhLm5hc2EuZ292IiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJlZGxfb3BzIiwiYWNyIjoiZWRsIiwiYXNzdXJhbmNlX2xldmVsIjozfQ.TMWqEtpPA3BPxT5i8xdz816DXpFo1PJdIljZM3YIzBcxzhLkc62sCecxTKTIeMBnb9Dxuqeejn_4ctcBMyWhO7XGdYJn0-a-zGvwg7k7evfhS98n6AJSbXoUCAmPoTS9FjevLEFZf2liJiaDRQ6PafwnMTy3pPmEnWo8Y1ZGgNBH3NoeITogPrQhismWFvjNOW8IDbNLTs6Cxj-7Kd6RMwn3cXfsJicsOtHB-w62B9GsmUyqtVfLmyC1hvPathcq_Ksl546WkMbE_zd8Rr8bNkWpUchZQbk1bheVlnoEvY78K92ja53_mTuir_BqbDyLDhGnwND7P3MgO_jYdOgR8g"
+```
+
+```{r}
+#| eval: false
+options(tigris_use_cache = TRUE)
+
+roi_hawaii <- counties(state = "HI", cb = TRUE, year = 2026)
+```
+
+```{r}
+#| eval: false
+library(terra)
+crs(roi_hawaii)
+```
+

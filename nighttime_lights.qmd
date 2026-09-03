@@ -8,6 +8,7 @@ library(terra)
 library(ggplot2)
 library(tidyterra)
 library(lubridate)
+library(tigris)
 
 #### Define NASA bearer token
 bearer <- "eyJ0eXAiOiJKV1QiLCJvcmlnaW4iOiJFYXJ0aGRhdGEgTG9naW4iLCJzaWciOiJlZGxqd3RwdWJrZXlfb3BzIiwiYWxnIjoiUlMyNTYifQ.eyJ0eXBlIjoiVXNlciIsInVpZCI6InNtYWxsbGlnaHQiLCJleHAiOjE3OTI4Nzg5MDEsImlhdCI6MTc4NzY5NDkwMSwiaXNzIjoiaHR0cHM6Ly91cnMuZWFydGhkYXRhLm5hc2EuZ292IiwiaWRlbnRpdHlfcHJvdmlkZXIiOiJlZGxfb3BzIiwiYWNyIjoiZWRsIiwiYXNzdXJhbmNlX2xldmVsIjozfQ.TMWqEtpPA3BPxT5i8xdz816DXpFo1PJdIljZM3YIzBcxzhLkc62sCecxTKTIeMBnb9Dxuqeejn_4ctcBMyWhO7XGdYJn0-a-zGvwg7k7evfhS98n6AJSbXoUCAmPoTS9FjevLEFZf2liJiaDRQ6PafwnMTy3pPmEnWo8Y1ZGgNBH3NoeITogPrQhismWFvjNOW8IDbNLTs6Cxj-7Kd6RMwn3cXfsJicsOtHB-w62B9GsmUyqtVfLmyC1hvPathcq_Ksl546WkMbE_zd8Rr8bNkWpUchZQbk1bheVlnoEvY78K92ja53_mTuir_BqbDyLDhGnwND7P3MgO_jYdOgR8g"
@@ -58,3 +59,64 @@ r_annual <- bm_raster(roi_sf = roi_sf,
                       date = 2012:2021,
                       bearer = bearer)
 ```
+
+```{r}
+
+#| eval: false
+options(tigris_use_cache = TRUE)
+
+roi_hawaii <- counties(state = "HI", cb = TRUE, year = 2026)
+```
+
+```{r}
+#| eval: false
+library(terra)
+crs(roi_hawaii)
+```
+
+```{r}
+#### Extract annual data
+ntl_df <- bm_extract(roi_hawaii = roi_hawaii,
+                     product_id = "VNP46A4",
+                     date = 2012:2022,
+                     bearer = bearer)
+
+#### Trends over time
+ntl_df |>
+  ggplot() +
+  geom_col(aes(x = date,
+               y = ntl_mean),
+           fill = "darkorange") +
+  facet_wrap(~NAME_1) +
+  labs(x = NULL,
+       y = "NTL Luminosity",
+       title = "Ghana Admin Level 1: Annual Average Nighttime Lights") +
+  scale_x_continuous(labels = seq(2012, 2022, 4),
+                     breaks = seq(2012, 2022, 4)) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+Kona Low Storm
+
+second storm(Mar 19-24)
+
+Cloud cover-?
+
+Weather reporting-?
+
+Satelite imagery-?
+
+Wind Direction-?
+
+How was weather data a week before the storm?
+
+Public HECO data-?
+
+Service hours for affected areas?
+
+When did the power cut officially come back on? 
+
+What infrastructure was damaged during the storm? Power lines, transformers, power stations etc. 
+
+Is HECO rerouting power visible?
