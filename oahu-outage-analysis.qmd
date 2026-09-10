@@ -222,9 +222,9 @@ statewide_trend <- ntl_trend |>
 
 ggplot(statewide_trend, aes(x = date, y = ntl_mean, fill = period)) +
   geom_col() +
-  scale_fill_manual(values = c("Baseline" = "grey70", "volcanic" = "firebrick")) +
+  scale_fill_manual(values = c("Baseline" = "grey70", "Volcanic" = "firebrick")) +
   labs(title = "Statewide Mean Nighttime Radiance by Day",
-       subtitle = paste0("Baseline (Jan 15-24, 2025) vs. Storm Night (", storm_date_label, ")"),
+       subtitle = paste0("Baseline (Apr 5-12, 2018) vs. Eruption Nights (May 27 - Jun 2, 2018)"),
        x = NULL, y = "Mean radiance", fill = NULL) +
   theme_minimal()
 ```
@@ -244,7 +244,7 @@ ggplot(ntl_trend, aes(x = date, y = ntl_mean, fill = period)) +
     inherit.aes = FALSE
   ) +
   facet_wrap(~county, scales = "free_y") +
-  scale_fill_manual(values = c("Baseline" = "grey70", "Storm" = "firebrick")) +
+  scale_fill_manual(values = c("Baseline" = "grey70", "Volcanic" = "firebrick")) +
   labs(title = "Mean Nighttime Radiance by Day, by County",
        subtitle = "Asterisks on Hawaii County mark nights during Kilauea's active summit eruption (Episode 4, began Jan 15, 2025) — lava glow, not grid activity",
        x = NULL, y = "Mean radiance", fill = NULL) +
@@ -536,7 +536,7 @@ tm_shape(z_score_meaningful) +
 Aggregating the z-score up to named communities (Census-designated places) makes it possible to compare specific neighborhoods against each other directly, rather than picking individual points by hand.
 
 ```{r cdp-boundaries}
-Hawaii_places <- places(state = "HI", cb = TRUE, year = 2022) |>
+Hawaii_places <- places(state = "HI", cb = TRUE, year = 2018) |>
   st_transform(4326) |>
   st_filter(Hawaii_boundary, .predicate = st_intersects)
 
@@ -558,7 +558,7 @@ ggplot(Hawaii_places_z) +
     na.value = "grey85", name = "Mean\nz-score"
   ) +
   labs(title = "Hawaii: Mean Radiance Z-Score by Community (CDP)",
-       subtitle = paste0("Storm night (", volcanic_date_label, ") vs. baseline")) +
+       subtitle = paste0("Eruption nights (2018-05-27) vs. baseline")) +
   theme_minimal()
 ```
 
