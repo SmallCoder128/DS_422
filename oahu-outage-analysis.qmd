@@ -1,6 +1,6 @@
 ---
-title: "Detecting a Power Outage from Space"
-subtitle: "EAGLE-I outage reports + NASA Black Marble nighttime lights, Hawaii, January 2025"
+title: "Detecting a Volcanic Eruption Outage from Space"
+subtitle: "NASA Black Marble nighttime lights, Hawaii, May 2018"
 format: html
 editor: visual
 ---
@@ -40,66 +40,6 @@ bearer <- get_nasa_token(username = "smalllight",
                          password = "C0mmand12EA!")
 ```
 
-## Finding the right night to look at
-
-VIIRS, the satellite behind Black Marble, passes over Hawaii at roughly 1-2 AM local time. Rather than picking whichever night had the worst outages overall, we look specifically at what EAGLE-I reported during that 1-2 AM window, since that's the moment a Black Marble image for a given date would actually be capturing.
-
-```{r eagle-i-load}
-eagle_i_hawaii <- read_feather(here("data/hawaii_outages_2025.feather")) |>
-  filter(county != "Kalawao")
-
-message("run_start_time timezone: ", attr(eagle_i_hawaii$run_start_time, "tzone"))
-```
-
-`run_start_time` is stored in UTC. Hawaii is UTC-10 with no daylight saving, so the local overpass window has to be found in HST, not by filtering UTC hours directly.
-
-```{r eagle-i-hst}
-eagle_i_hawaii <- eagle_i_hawaii |>
-  mutate(run_start_time_hst = with_tz(run_start_time, tzone = "Pacific/Honolulu"))
-
-overpass_window <- eagle_i_hawaii |>
-  mutate(
-    hour = hour(run_start_time_hst),
-    date = as.Date(run_start_time_hst)
-  ) |>
-  filter(hour %in% c(1, 2))
-```
-
-Each date is scored on how large and how widespread the outage was, specifically within that overpass window.
-
-```{r overpass-summary}
-overpass_summary <- overpass_window |>
-  group_by(date) |>
-  summarize(
-    mean_customers_out = mean(customers_out, na.rm = TRUE),
-    max_customers_out = max(customers_out, na.rm = TRUE),
-    n_counties_affected = n_distinct(county[customers_out > 0]),
-    .groups = "drop"
-  ) |>
-  mutate(
-    score = scales::rescale(max_customers_out) +
-      scales::rescale(n_counties_affected)
-  ) |>
-  arrange(desc(score))
-
-print(overpass_summary)
-```
-
-```{r storm-date}
-storm_date_label <- overpass_summary$date[1]
-message("Selected storm date (by overpass-window severity): ", storm_date_label)
-
-overpass_window |>
-  filter(date == storm_date_label) |>
-  summarize(
-    mean_customers_out_at_overpass = mean(customers_out, na.rm = TRUE),
-    max_customers_out_at_overpass = max(customers_out, na.rm = TRUE),
-    n_counties_affected_at_overpass = n_distinct(county[customers_out > 0])
-  )
-```
-
-The chart below shows the full outage timeline around the selected date, with the actual 1-2 AM overpass window shaded rather than marked with a single instantaneous line, since the exact overpass moment within that window isn't known precisely.
-
 ```{r overpass-timeline}
 overpass_start <- as.POSIXct(paste(storm_date_label, "01:00:00"),
                               tz = "Pacific/Honolulu")
@@ -118,7 +58,7 @@ eagle_i_hawaii |>
   theme_minimal()
 ```
 
-## Setting the baseline and storm dates
+## Setting the baseline and Volcanic dates
 
 The baseline is the 10 days immediately preceding the storm. This window happens to overlap Kilauea's summit eruption, which entered its fourth eruptive episode on January 15, 2025 and was still actively fountaining as of the January 18 HVO report. That's kept in the baseline intentionally rather than avoided, since its effect on Hawaii County shows up clearly in the county-level chart further down.
 

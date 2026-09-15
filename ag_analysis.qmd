@@ -1,0 +1,55 @@
+---
+title: "Agricultural Analysis"
+format: html
+editor: visual
+---
+
+### Read in Data
+
+```{r}
+library(tidyverse)
+library(sf)
+library(here)
+library(mapview)
+library(paletteer)
+library(RColorBrewer)
+```
+
+```{r}
+ag_2015 <- st_read(here("data/Ag_2015.geojson"))
+
+ag_2020 <- st_read(here("data/Ag_2020.geojson"))
+```
+
+### Make a Map
+
+```{r}
+colors1 <- paletteer_d("palettetown::feraligatr")
+
+mapview(ag_2015, zcol = "cropcatego", col.regions = colors1)
+```
+
+Distribution of acreage
+
+```{r}
+ggplot(ag_2015, aes(x = acreage)) +
+  geom_histogram()+
+  theme_minimal() + 
+  facet_wrap(~island, scales = "free_y")
+```
+
+Questions:
+
+How have things changed between 2015 and 2020?
+
+Has the amount of ag land changed between 2015 and 2020?
+
+```{r}
+
+Sum2015Acre <- sum(ag_2015$acreage) 
+Sum2020Acre <- sum(ag_2020$acreage)
+
+Sum2015Acre - Sum2020Acre
+
+
+```
