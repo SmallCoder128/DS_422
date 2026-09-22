@@ -1,0 +1,44 @@
+---
+title: "solar_detection"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(here)
+library(mapview)
+library(tidycensus)
+```
+
+## Read in the Data
+
+```{r}
+solar_oahu <- st_read(here("data/oahu_solar_dedup_simple.geojson"))
+```
+
+```{r}
+mapview(solar_oahu)
+```
+
+## Retrieve some census data
+
+```{r}
+oahu_hh_income <- get_acs(geography = "tract",
+                          variables = "B19013_001",
+                          state = "HI",
+                          county = "Honolulu",
+                          geometry = TRUE,
+                          year = 2022)
+```
+
+```{r}
+mapview(oahu_hh_income, zcol = "moe")
+```
+
+```{r}
+ggplot(oahu_hh_income, aes(x=moe,y=estimate))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```

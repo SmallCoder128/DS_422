@@ -1,9 +1,6 @@
----
+------------------------------------------------------------------------
 
-editor_options: 
-  markdown: 
-    wrap: 72
----
+editor_options: markdown: wrap: 72 ---
 
 # Exploring Agricultural Land Use Change in Hawaiʻi (2015 → 2020)
 
@@ -18,7 +15,7 @@ In this mini-project, you will explore how agricultural land use has changed acr
 Download the GeoJSON files and place both in your `data/` folder in your **DS422-Geocomputation** project:
 
 | Year | Dataset | Link |
-|---------------------|-------------------------------|---------------------|
+|----|----|----|
 | 2015 | Agricultural Land Use Baseline | <https://geoportal.hawaii.gov/datasets/HiStateGIS>::agricultural-land-use-2015-baseline/about |
 | 2020 | Hawaiʻi Agricultural Lands | [https://geoportal.hawaii.gov/items/342ee6c7547f45ddbfc07caf4ca2887d](https://geoportal.hawaii.gov/datasets/342ee6c7547f45ddbfc07caf4ca2887d_19/explore?location=20.566850%2C-157.274800%2C7) |
 
