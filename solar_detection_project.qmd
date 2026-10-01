@@ -42,3 +42,120 @@ ggplot(oahu_hh_income, aes(x=moe,y=estimate))+
   geom_point()+
   geom_smooth(method = "lm")
 ```
+
+```{r}
+oahu_solar_clean <- solar_oahu|>
+  filter(!st_is_empty(geometry)) |> 
+  st_make_valid() |> 
+  st_transform(crs = 26904)
+
+oahu_tracts <- oahu_hh_income |> 
+  st_make_valid() |> 
+  st_transform(crs = 26904)
+
+```
+
+```{r}
+# Give each tract an explicit area (land area in m^2, using ALAND from tigris attrs if you want,
+# or just recompute from geometry)
+oahu_tracts <- oahu_tracts |>
+  mutate(tract_area_m2 = as.numeric(st_area(geometry)))
+
+# Intersect solar panels with tracts - this clips panels at tract boundaries
+solar_by_tract <- st_intersection(oahu_solar_clean, oahu_tracts)
+
+# Compute area of each (clipped) panel piece
+solar_by_tract <- solar_by_tract |>
+  mutate(solar_area_m2 = as.numeric(st_area(geometry)))
+
+# Aggregate to tract level
+solar_summary <- solar_by_tract |>
+  st_drop_geometry() |>
+  group_by(GEOID) |>
+  summarise(total_solar_area_m2 = sum(solar_area_m2), .groups = "drop")
+
+# Join back to tract polygons for mapping
+oahu_tracts_solar <- oahu_tracts |>
+  left_join(solar_summary, by = "GEOID") |>
+  mutate(
+    total_solar_area_m2 = replace_na(total_solar_area_m2, 0),
+    pct_tract_solar = total_solar_area_m2 / tract_area_m2 * 100
+  )
+```
+
+```{r}
+mapview(oahu_tracts_solar, zcol = "pct_tract_solar", label = oahu_tracts_solar$NAME)
+```
+
+```{r}
+mapview(oahu_tracts_solar, zcol = "total_solar_area_m2") + mapview(oahu_tracts_solar, zcol = "estimate")
+```
+
+```{r}
+oahu_tract_pop <- get_acs(geography = "tract",
+                          variables = "B01001_001",
+                          state = "HI",
+                          county = "Honolulu",
+                          geometry = FALSE,
+                          year = 2022)
+```
+
+```{r}
+library(dplyr)
+
+oahu_tract_pop <- rename(oahu_tract_pop, pop_estimate = estimate, pop_moe = moe)
+```
+
+```{r}
+oahu_full <- left_join(oahu_tracts_solar, oahu_tract_pop, by = 'GEOID')
+
+oahu_full <- oahu_full |> 
+  select(-c(NAME.y, variable.y))
+```
+
+## Filter out low pop high solar
+
+```{r}
+oahu_full <- oahu_full |> 
+  filter(!(pop_estimate < 150 & total_solar_area_m2 > 100)) |> #  Removes small pop large solar tracts
+  filter(!(NAME.x %in% c("Census Tract 89.31; Honolulu County; Hawaii", "Census Tract 89.33; Honolulu County; Hawaii","Census Tract 100; Honolulu County; Hawaii","Census Tract 85.02; Honolulu County; Hawaii", "Census Tract 83.01; Honolulu County; Hawaii"))) # Removes tracts with massive solar farms
+
+```
+
+## Scatterplot
+
+```{r}
+library(ggpubr)
+
+ggplot(oahu_full, aes(x = estimate, y = total_solar_area_m2))+ 
+  geom_point(color="gold") + 
+  geom_smooth(method = "lm")+
+  theme_minimal()+
+  stat_cor()
+```
+
+## Write Up 
+
+This project for DS-422 Geo-computation seeks to map solar panels on roofs in Honolulu county and correlate them with income. The data was gathered from the U.S census API and from a SAM3 scan of Oahu done by Connor Flynn and others at Chaminade University. The SAM3 scan was not perfect in solar identification but still provided more data than was publicly available. The census income metric is also not perfect which needs to be disclosed before the discussion of the results of this project.
+
+The aim of this project is to find the correlation between income and solar panels. This QMD loads in all of the data from the SAM3 scan and maps it. Then separately the the income tracts are mapped. While exploring the data it became clear that there were large tracts on Oahu where large solar farms had been set up. Many of these tracts had very few residents some having none altogether. While this is interesting data it hinders our ability to discern if more income means more solar on roofs. In order to examine these two things together I used the SF package to examine where the census tract geometry intersected with the solar geometry to create a measurement of total solar area for each tract. This still wasn't perfect because of the aforementioned solar farms so I added census population data to the mix to extract tracts where there was more than 100 square meters of solar and less than 150 people. This cleaned up most of the set but there were still a couple of larger tracts that needed cleaned out manually. Once all of those tracts were cleaned out we had a workable dataset. This wasn't the most ideal methodology; it would be preferable to remove the solar farm geometries before any of the data was ever joined but that is much more computationally intensive.
+
+To answer this question I made a scatterplot with a linear regression line with the y axis showing solar meters squared and the x axis showing median income. The figure below shows a statistically significant 0.2 correlation between the two axes.
+
+```{r echo= FALSE}
+ggplot(oahu_full, aes(x = estimate, y = total_solar_area_m2))+ 
+  geom_point(color="gold") + 
+  geom_smooth(method = "lm")+
+  theme_minimal()+
+  stat_cor()
+```
+
+Looking at this graph we can still see that there are some serious outliers with a disproportionate amount of solar that may be contributed by commercial buildings or other large areas of solar that aren't residential. Regardless we have at least this 0.2 correlation which would only move upwards as we clean out non-residential solar from the set.
+
+If this was to be improved in the future several things would be helpful.
+
+- SAM3 Solar results could be improved to more accurately reflect the state's solar assets.
+
+- Solar farms could be removed by removing the individual panels, maybe by using some sort of proximity algorithm
+
+- By using zoning data it may be possible to quickly remove non-residential solar from the dataset altogether.
