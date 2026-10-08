@@ -7,6 +7,7 @@ library(fasterize)
 library(here)
 library(tidyverse)
 library(shinyTime)
+library(bslib)
 
 
 utm_epsg <- function(lon, lat) {
@@ -36,13 +37,14 @@ icon_pat <- makeAwesomeIcon(
 
 # ---------------------------------------------------------------- UI
 ui <- fluidPage(
-  titlePanel("Isochrone Accessibility Explorer"),
+  titlePanel("Emergency Medical Services Routing"),
   sidebarLayout(
     sidebarPanel(
       width = 3,
       textInput("address", "Starting location",
                 value = "3140 Waialae Ave, Honolulu, HI 96816"),
-      textInput("patient", "Patient location: "),
+      textInput("patient", "Patient location: "), # 99-1849 Aiea Heights Dr, Aiea, HI 96701
+      
       selectInput("profile", "Travel mode",
                   choices = c("Driving" = "driving",
                               "Driving (traffic)" = "driving-traffic",
@@ -61,12 +63,18 @@ ui <- fluidPage(
                   selected = "plasma"),
       sliderInput("opacity", "Surface opacity",
                   min = 0.1, max = 1, value = 0.5, step = 0.1),
-      actionButton("go", "Create isochrones", class = "btn-primary"),
-      helpText("Smaller intervals make a smoother surface but need more API calls.")
+      
     ),
     mainPanel(
       width = 9,
-      leafletOutput("map", height = "80vh")
+      div(
+        class = "mb-3",
+        actionButton("use_patient", "Change start loc"),
+        actionButton("go", "Create isochrones", class = "btn-primary"),
+        helpText("Smaller intervals make a smoother surface but need more API calls.")
+      ),
+      leafletOutput("map", height = "80vh"),
+      
     )
   )
 )
@@ -95,6 +103,21 @@ server <- function(input, output, session) {
                              profile = input$profile,
                              time = times,
                              depart_at = depart)
+        route <- NULL
+        if (!is.null(patient_loc)) {
+          route <- tryCatch(
+            mb_directions(origin = loc,
+                          destination = patient_loc,
+                          profile = input$profile,
+                          output = "sf"),
+            error = function(e) {
+              showNotification(paste("Route failed:", conditionMessage(e)),
+                               type = "warning", duration = 8)
+              NULL
+            }
+          )
+        }
+        
         incProgress(0.4, detail = "Building surface")
         
         isos_proj <- st_transform(isos, utm_epsg(loc[1], loc[2]))
@@ -103,7 +126,7 @@ server <- function(input, output, session) {
         
         list(loc = loc, patient = patient_loc,
              start_label = input$address, patient_label = input$patient,
-             isos = isos, surface = surface)
+             isos = isos, surface = surface, route = route)
       }, error = function(e) {
         showNotification(paste("Something went wrong:", conditionMessage(e)),
                          type = "error", duration = 10)
@@ -142,9 +165,17 @@ server <- function(input, output, session) {
         addAwesomeMarkers(lng = res$loc[1], lat = res$loc[2],
                   popup = input$address, icon = icon_red) %>%
         addAwesomeMarkers(lng = ~Longitude, lat = ~Latitude, 
-                  popup = ~Hospital, icon = icon_blue, data = hospital_map)
+                  popup = ~Hospital, icon = icon_blue, data = hospital_map,
+                  group = "hospitals", layerId = ~Hospital)
 
     if (!is.null(res$patient)) {
+      if (!is.null(res$route)) {
+        m <- m %>%
+          addPolylines(data = res$route,
+                       color = "#1f78b4", weight = 5, opacity = 0.9,
+                       popup = sprintf("%.0f min, %.1f km",
+                                       res$route$duration, res$route$distance))
+      }
        m <- m %>%
          addAwesomeMarkers(lng = res$patient[1], lat = res$patient[2],
                           popup = paste("Patient:", res$patient_label),
@@ -156,6 +187,42 @@ server <- function(input, output, session) {
                       lng2 = max(st_bbox(res$isos)[c(1, 3)]),
                       lat2 = max(st_bbox(res$isos)[c(2, 4)]))
     })
+  observeEvent(input$use_patient, {
+    req(nzchar(trimws(input$patient)))
+    updateTextInput(session, "address", value = input$patient)
+    updateTextInput(session, "patient", value = "")
+  })
+  observeEvent(input$map_marker_click, {
+    click <- input$map_marker_click
+    req(click$group == "hospitals")   # ignore start/patient markers
+    
+    res <- iso_data()
+    req(res)
+    
+    # Route from the patient if one was entered, otherwise from the start location
+    origin <- if (!is.null(res$patient)) res$patient else res$loc
+    
+    route <- tryCatch(
+      mb_directions(origin = origin,
+                    destination = c(click$lng, click$lat),
+                    profile = input$profile,
+                    output = "sf"),
+      error = function(e) {
+        showNotification(paste("Route failed:", conditionMessage(e)),
+                         type = "warning", duration = 8)
+        NULL
+      }
+    )
+    req(route)
+    
+    leafletProxy("map") %>%
+      clearGroup("hospital_route") %>%
+      addPolylines(data = route, group = "hospital_route",
+                   color = "#e31a1c", weight = 5, opacity = 0.9,
+                   popup = sprintf("%s: %.0f min, %.1f km",
+                                   click$id, route$duration, route$distance))
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
