@@ -254,9 +254,58 @@ change_md |>
 ```
 
 ```{r}
+id_county <- counties(state = "id", year = 2020, cb = TRUE)
 
 map_id <- id_county |> 
   left_join(change_md, by = c("GEOID" = "w_county"))
 
 mapview(map_id, zcol = "C000_pct_change")
 ```
+
+```{r}
+wac_md <- grab_lodes(
+  state      = "hi",
+  year       = 2020,
+  lodes_type = "wac",
+  job_type   = "JT00",
+  segment    = "S000",
+  agg_geo    = "tract"
+)
+
+earn_shares <- compute_earnings_share(wac_md, type = "wac", geo_col = "w_tract")
+
+# Counties with the highest share of low-wage jobs
+earn_shares %>%
+  arrange(desc(share_low)) %>%
+  select(w_tract, share_low, share_mid, share_high) %>%
+  head(10)
+```
+
+```{r}
+earn_long <- compute_earnings_share(
+  wac_md,
+  type    = "wac",
+  geo_col = "w_tract",
+  output  = "long"
+)
+
+head(earn_long)
+```
+
+```{r}
+hi_tract20 <- tracts(state="hi", year = 2020, cb = TRUE)
+
+map_hi_in <- hi_tract20 |> 
+  left_join(earn_shares, by = c("GEOID" = "w_tract"))
+```
+
+```{r}
+mapview(map_hi_in, zcol = "share_high")
+```
+
+```{r}
+m <- mapview(map_hi_in, zcol = "share_high")
+m@map |> leaflet::fitBounds(-157.557814, 21.805664, -158.395249, 21.133741)
+```
+
+-158.395249 , 21.133741,-157.557814 , 21.805664
