@@ -134,7 +134,7 @@ ggplot(oahu_full, aes(x = estimate, y = total_solar_area_m2))+
   stat_cor()
 ```
 
-## Write Up 
+## Write Up
 
 This project for DS-422 Geo-computation seeks to map solar panels on roofs in Honolulu county and correlate them with income. The data was gathered from the U.S census API and from a SAM3 scan of Oahu done by Connor Flynn and others at Chaminade University. The SAM3 scan was not perfect in solar identification but still provided more data than was publicly available. The census income metric is also not perfect which needs to be disclosed before the discussion of the results of this project.
 

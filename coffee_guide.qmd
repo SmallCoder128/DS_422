@@ -1,0 +1,88 @@
+---
+title: "GIS & Coffee"
+format: html
+editor: visual
+---
+
+## Welcome ☕
+
+This lab is meant to utilize your GIS skills for an entrepreneurial endeavor; where to open your first coffee shop. You will go through each step of the lab building a case for why your chosen location is one worth investing in. Your assignment is to create a new qmd called coffee_shop.qmd, run all the analyses outlined in this document, and render the qmd into a .html that is pushed to github for final submission on canvas. This is **due November 17th at 11:30 AM**.
+
+### Step 1 - Logo
+
+Every good business needs a name and nice logo, create one manually or with AI for your new cafe and save it as a .png that will show up in your rendered .qmd .html file. (***2 points***)
+
+### Step 2 - Finding a location
+
+Current retail/restaurant spaces for lease and rent are difficult to bring into R via API or package so go to [LoopNet for retail spaces](https://www.loopnet.com/search/restaurants/for-lease/?bb=7qhhjkuguSwg09g0vB) and find an open location for your coffee shop. You'll need to grab the lat and long for the open space of your choosing. This link is for Oahu, but your coffee shop can be anywhere in the U.S (***4 points***)
+
+### Step 3 - Map the competition
+
+Use code like this to grab osm data on cafes in the area of your choosing. Map it and show competition relative to your chosen location, Is there tough competition around your chosen location? If so, how will your coffee shop differ? (***6 points***)
+
+`library(osmdata)`
+
+`oahu_bb <- c(xmin = -158.30, ymin = 21.24, xmax = -157.63, ymax = 21.73)`
+
+`cafe_query <- opq(bbox = oahu_bb, timeout = 180) |> add_osm_features(features = list("amenity" = "cafe", "shop" = "coffee"))`
+
+`osm_raw <- osmdata_sf(cafe_query)`
+
+`cafe_points <- as.data.frame(osm_raw$osm_points)`
+
+### Step 4.1 - Resident Customer Demographics
+
+How can we map some spatial information describing your potential customers. Use `tidycensus` to pull in some census data for the tract your coffee shop is in.
+
+Within the get_acs() function think of putting in some of these variable codes based on what is most relevant to your coffee shop (***4 points***)
+
+| Code | Name in script | What it measures | Universe (denominator) |
+|----|----|----|----|
+| B01001_001 | `total_pop` | Total population | All residents |
+| B01001_007 | `m_18_19` | Male, 18–19 years | All residents |
+| B01001_008 | `m_20` | Male, 20 years | All residents |
+| B01001_009 | `m_21` | Male, 21 years | All residents |
+| B01001_010 | `m_22_24` | Male, 22–24 years | All residents |
+| B01001_011 | `m_25_29` | Male, 25–29 years | All residents |
+| B01001_012 | `m_30_34` | Male, 30–34 years | All residents |
+| B01001_031 | `f_18_19` | Female, 18–19 years | All residents |
+| B01001_032 | `f_20` | Female, 20 years | All residents |
+| B01001_033 | `f_21` | Female, 21 years | All residents |
+| B01001_034 | `f_22_24` | Female, 22–24 years | All residents |
+| B01001_035 | `f_25_29` | Female, 25–29 years | All residents |
+| B01001_036 | `f_30_34` | Female, 30–34 years | All residents |
+| B19013_001 | `med_hh_income` | Median household income (inflation-adjusted dollars) | Households |
+| B08301_001 | `commuters` | Total workers 16+ (base for commute shares) | Workers 16+ |
+| B08301_010 | `transit` | Commute by public transportation (excl. taxi) | Workers 16+ |
+| B08301_018 | `bike` | Commute by bicycle | Workers 16+ |
+| B08301_019 | `walk` | Walked to work | Workers 16+ |
+| B08301_021 | `wfh` | Worked from home | Workers 16+ |
+| B14001_001 | `school_pop` | Population 3+ (base for enrollment) | Population 3+ |
+| B14001_008 | `college_ug` | Enrolled in college, undergraduate | Population 3+ |
+| B14001_009 | `college_grad` | Enrolled in graduate or professional school | Population 3+ |
+| B15003_001 | `pop_25plus` | Population 25+ (base for education) | Population 25+ |
+| B15003_022 | `bachelors` | Bachelor’s degree | Population 25+ |
+| B15003_023 | `masters` | Master’s degree | Population 25+ |
+| B15003_024 | `professional` | Professional school degree (JD, MD, etc.) | Population 25+ |
+| B15003_025 | `doctorate` | Doctorate degree | Population 25+ |
+| B25064_001 | `med_gross_rent` | Median gross rent (residential, rent + utilities) | Renter-occupied units paying cash rent |
+
+### Step 4.2 - Working Customer Demographics
+
+Utilizing [LODES data](https://lehd.ces.census.gov/data/) and the l[ehdr package](https://github.com/jamgreen/lehdr/) make some maps describing workforce characteristics of the tract around your shop (***4 points)***
+
+### Step 5 - What's nearby?
+
+Utilizing [isochrones](https://walker-data.com/posts/accessibility-surface/) show us whats a 5 minute drive and 10 minute walk from your shop. Think about utilizing rush hour traffic data when people would grab a coffee before work (if that is your audience/customer base) (***4 points)***
+
+### Step 6 - Do you need a generator?
+
+At the county level, use the [eagle i dataset](https://www.osti.gov/biblio/3012826) to show how many times the county your coffee shop is in lost power in 2025. Make a line plot of outages over time with `ggplot` (***3 points***)
+
+### Bonus Points Step - Does your cafe have ML predicted solar?
+
+I know this is a bit of a stretch but I'm having fun combining all of this course material into one challenge. For bonus points use [geosam](https://walker-data.com/geosam/) and `sam_detect()` to show ML predicted solar for your cafe and the buildings around it.
+
+### Step 7 - Conclusion
+
+Write a 7-12 sentence summary on why you think your cafe location is a good choice/worth investing in based on the spatial data you were able to describe in the steps above. (***6 points***)
