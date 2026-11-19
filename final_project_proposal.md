@@ -40,6 +40,8 @@ What methods will you actually run? For example, image segmentation, spatial sta
 
 <!-- Write your answer below this line -->
 
+I'll use time series because I have that future implementation data. I'll probably be doing a lot of intersection analysis seeing where counties intersect with these data centers and looking at the demographics, resources and amenities of those counties.
+
 ------------------------------------------------------------------------
 
 ## 4. 3-5 peer-reviewed publications or news articles surrounding my research question
