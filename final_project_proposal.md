@@ -48,7 +48,7 @@ I'll use time series because I have that future implementation data. I'll probab
 
 Give the link below. Add a sentence or two on why each source is relevant to your project.
 
-1.   <https://ic.unicamp.br/~bit/ensino/mo809_1s13/papers/Datacenters_Virtualizacao/auxiliar/Best%20Practices%20for%20Data%20Centers-%20Lessons%20Learned%20from%20Benchmarking%2022%20%20%20Data%20Centers%20.pdf>
+1.  <https://ic.unicamp.br/~bit/ensino/mo809_1s13/papers/Datacenters_Virtualizacao/auxiliar/Best%20Practices%20for%20Data%20Centers-%20Lessons%20Learned%20from%20Benchmarking%2022%20%20%20Data%20Centers%20.pdf>
 
 This paper gives a comprehensive view of the issues with power grid and the consumption of Data Centers.
 

@@ -1,6 +1,8 @@
 ---
 title: "Coffee_shop"
-format: html
+format: 
+  html:
+    embed-resources: true
 editor: visual
 execute:
   warning: false
